@@ -1,4 +1,5 @@
 import { Volume2 } from "lucide-react";
+import avatarImg from "@/assets/avatar.png";
 import { speakText } from "@/hooks/useSpeech";
 import ReactMarkdown from "react-markdown";
 import type { ChatMessage } from "@/types/chat";
@@ -11,7 +12,7 @@ export default function ChatBubble({ message }: { message: ChatMessage }) {
     <div className={cn("flex animate-fade-in", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
         <img
-          src="https://api.dicebear.com/9.x/adventurer/svg?seed=TravelStar"
+          src={avatarImg}
           alt=""
           className="w-8 h-8 rounded-full mr-2 mt-1 shrink-0 hidden sm:block"
         />

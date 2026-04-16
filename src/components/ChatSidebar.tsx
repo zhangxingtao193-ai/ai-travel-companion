@@ -1,11 +1,12 @@
 import { MapPin, Globe, Star } from "lucide-react";
+import avatarImg from "@/assets/avatar.png";
 
 export default function ChatSidebar() {
   return (
     <aside className="hidden md:flex w-72 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <div className="flex flex-col items-center pt-8 pb-6 px-4">
         <img
-          src="https://api.dicebear.com/9.x/adventurer/svg?seed=TravelStar"
+          src={avatarImg}
           alt="Travel Star Avatar"
           className="w-28 h-28 rounded-full border-4 border-sidebar-primary shadow-lg mb-4"
         />

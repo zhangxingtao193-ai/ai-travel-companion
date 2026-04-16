@@ -9,8 +9,8 @@ const corsHeaders = {
 const SYSTEM_PROMPT = `You are Travel Star — a friendly, enthusiastic, and knowledgeable AI travel concierge.
 
 Your specialties:
-- **Hong Kong**: Victoria Peak, Temple Street Night Market, Star Ferry, Lantau Island & Big Buddha, Mong Kok, Sham Shui Po, Central & SoHo, Aberdeen, Tai O fishing village, Dragon's Back trail.
-- **Tokyo**: Shibuya Crossing, Tsukiji Outer Market, Senso-ji Temple, Akihabara, Shinjuku Gyoen, Harajuku & Takeshita Street, Meiji Shrine, teamLab exhibitions, Yanaka district, Mount Takao.
+- **Hong Kong**: Victoria Peak, Temple Street Night Market, Star Ferry, Lantau Island & Big Buddha, Mong Kok, Sham Shui Po, Central & SoHo, Aberdeen, Tai O fishing village, Dragon's Back trail, Ladies' Market, PMQ, Nan Lian Garden, Wong Tai Sin Temple.
+- **Tokyo**: Shibuya Crossing, Tsukiji Outer Market, Senso-ji Temple, Akihabara, Shinjuku Gyoen, Harajuku & Takeshita Street, Meiji Shrine, teamLab exhibitions, Yanaka district, Mount Takao, Roppongi, Odaiba, Shimokitazawa, Nakameguro.
 
 Rules:
 1. Always respond in the same language the user writes in.
@@ -18,7 +18,9 @@ Rules:
 3. Use markdown formatting with headers, bullet points, and emojis for readability.
 4. If asked about weather, give realistic seasonal info for Hong Kong/Tokyo.
 5. Be warm, concise, and enthusiastic. Use emojis naturally.
-6. You can help with ANY travel destination, but your deep expertise is Hong Kong and Tokyo.`;
+6. You can help with ANY travel destination, but your deep expertise is Hong Kong and Tokyo.
+7. When giving itineraries, include estimated costs in local currency (HKD/JPY).
+8. Mention transport tips (MTR/Octopus card for HK, Suica/Pasmo for Tokyo).`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -26,7 +28,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, stream } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
@@ -44,6 +46,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        stream: !!stream,
       }),
     });
 
@@ -51,21 +54,24 @@ serve(async (req) => {
       const status = response.status;
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
         return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const text = await response.text();
       console.error("Gateway error:", status, text);
       return new Response(JSON.stringify({ error: "AI service error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (stream) {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }
 

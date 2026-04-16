@@ -38,6 +38,12 @@ Before the first deployment:
 3. In GitHub, open Settings > Pages and set Source to GitHub Actions.
 4. Push to the main branch or run the workflow manually from the Actions tab.
 
+The workflow now validates both secrets first and then writes them into a temporary .env.production file on the GitHub Actions runner before running the Vite build. This means:
+
+- You do not need to commit .env.
+- GitHub does not generate the token for you. You must copy the real Supabase publishable key into the repository secret VITE_SUPABASE_PUBLISHABLE_KEY.
+- If either secret is missing, the workflow fails early with a clear error message.
+
 Notes:
 
 - The workflow listens to both main and master. You can remove the unused branch trigger later.
